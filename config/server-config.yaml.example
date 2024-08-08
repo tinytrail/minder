@@ -101,7 +101,7 @@ authz:
 #  sources:
 #    - type: tgz
 #      location: ./bundles/healthcheck.tar.gz
-#
+#main
 #default_profiles:
 #  enabled: true
 #  profiles:
@@ -110,11 +110,12 @@ authz:
 #    namespace: stacklok
 #    name: healthcheck
 
+# Set key_dir path to /app/.ssh for docker compose and .ssh for running minder outside of docker compose
 crypto:
     keystore:
         type: local
         local:
-            key_dir: "./.ssh"
+            key_dir: "/app/.ssh"
     default:
         key_id:    token_key_passphrase
 
