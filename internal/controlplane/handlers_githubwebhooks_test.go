@@ -117,7 +117,7 @@ func (s *UnitTestSuite) TestHandleWebHookPing() {
 	defer ctrl.Finish()
 
 	mockStore := mockdb.NewMockStore(ctrl)
-	srv, evt := newDefaultServer(t, mockStore, nil, true)
+	srv, evt := newDefaultServer(t, mockStore, nil, nil)
 	srv.cfg.WebhookConfig.WebhookSecretFile = whSecretFile.Name()
 	defer evt.Close()
 
@@ -163,7 +163,7 @@ func (s *UnitTestSuite) TestHandleWebHookUnexistentRepository() {
 	defer ctrl.Finish()
 
 	mockStore := mockdb.NewMockStore(ctrl)
-	srv, evt := newDefaultServer(t, mockStore, nil, true)
+	srv, evt := newDefaultServer(t, mockStore, nil, nil)
 	defer evt.Close()
 
 	pq := testqueue.NewPassthroughQueue(t)
@@ -225,7 +225,7 @@ func (s *UnitTestSuite) TestHandleWebHookRepository() {
 	defer os.Remove(prevCredsFile.Name())
 
 	mockStore := mockdb.NewMockStore(ctrl)
-	srv, evt := newDefaultServer(t, mockStore, nil, true)
+	srv, evt := newDefaultServer(t, mockStore, nil, nil)
 	srv.cfg.WebhookConfig.WebhookSecret = "not-our-secret"
 	srv.cfg.WebhookConfig.PreviousWebhookSecretFile = prevCredsFile.Name()
 	defer evt.Close()
@@ -328,7 +328,7 @@ func (s *UnitTestSuite) TestHandleWebHookUnexistentRepoPackage() {
 	defer ctrl.Finish()
 
 	mockStore := mockdb.NewMockStore(ctrl)
-	srv, evt := newDefaultServer(t, mockStore, nil, true)
+	srv, evt := newDefaultServer(t, mockStore, nil, nil)
 	defer evt.Close()
 
 	pq := testqueue.NewPassthroughQueue(t)
@@ -380,7 +380,7 @@ func (s *UnitTestSuite) TestNoopWebhookHandler() {
 	defer ctrl.Finish()
 
 	mockStore := mockdb.NewMockStore(ctrl)
-	srv, evt := newDefaultServer(t, mockStore, nil, true)
+	srv, evt := newDefaultServer(t, mockStore, nil, nil)
 	defer evt.Close()
 
 	go func() {
@@ -417,7 +417,7 @@ func (s *UnitTestSuite) TestHandleWebHookWithTooLargeRequest() {
 	defer ctrl.Finish()
 
 	mockStore := mockdb.NewMockStore(ctrl)
-	srv, evt := newDefaultServer(t, mockStore, nil, true)
+	srv, evt := newDefaultServer(t, mockStore, nil, nil)
 	defer evt.Close()
 
 	pq := testqueue.NewPassthroughQueue(t)
@@ -3226,7 +3226,7 @@ func (s *UnitTestSuite) TestHandleGitHubWebHook() {
 				mockStore = mockdb.NewMockStore(ctrl)
 			}
 
-			srv, evt := newDefaultServer(t, mockStore, nil, true)
+			srv, evt := newDefaultServer(t, mockStore, nil, nil)
 			srv.cfg.WebhookConfig.WebhookSecret = "not-our-secret"
 			srv.cfg.WebhookConfig.PreviousWebhookSecretFile = prevCredsFile.Name()
 			srv.providerManager = providerSetup(ctrl)
@@ -3814,7 +3814,7 @@ func (s *UnitTestSuite) TestHandleGitHubAppWebHook() {
 				mockStore = mockdb.NewMockStore(ctrl)
 			}
 
-			srv, evt := newDefaultServer(t, mockStore, nil, true)
+			srv, evt := newDefaultServer(t, mockStore, nil, nil)
 			srv.cfg.WebhookConfig.WebhookSecret = "test"
 
 			pq := testqueue.NewPassthroughQueue(t)
