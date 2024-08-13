@@ -432,7 +432,7 @@ func (p *ghProviderService) getInstallationOwner(ctx context.Context, installati
 }
 
 // Check if the user is a member of the GH organization
-func (c *ghProviderService) ValidateOrgMembershipForToken(ctx context.Context, token *oauth2.Token, org string) (bool, error) {
+func (*ghProviderService) ValidateOrgMembershipForToken(ctx context.Context, token *oauth2.Token, org string) (bool, error) {
 	ghClient := github.NewClient(nil).WithAuthToken(token.AccessToken)
 	membership, ghResponse, err := ghClient.Organizations.GetOrgMembership(ctx, "", org)
 	if err != nil {
@@ -443,7 +443,7 @@ func (c *ghProviderService) ValidateOrgMembershipForToken(ctx context.Context, t
 	}
 	if membership.GetState() == "active" {
 		return true, nil
-	} 
+	}
 	// If the user is not a member of the organization
 	return false, nil
 }

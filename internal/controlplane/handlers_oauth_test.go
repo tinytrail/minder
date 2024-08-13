@@ -466,6 +466,10 @@ func TestProviderCallback(t *testing.T) {
 		service.EXPECT().ValidateOrgMembershipForToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 	}
 
+	withInvalidORgMemberships := func(service *mockprovsvc.MockGitHubProviderService) {
+		service.EXPECT().ValidateOrgMembershipForToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)
+	}
+
 	testCases := []struct {
 		name                       string
 		redirectUrl                string
@@ -475,17 +479,17 @@ func TestProviderCallback(t *testing.T) {
 		projectIDBySessionNumCalls int
 		err                        string
 		config                     []byte
-		buildStubs				   func(service *mockprovsvc.MockGitHubProviderService)
-	}{ {
+		buildStubs                 func(service *mockprovsvc.MockGitHubProviderService)
+	}{{
 		name:                       "Success",
 		redirectUrl:                "http://localhost:8080",
 		projectIDBySessionNumCalls: 2,
 		storeMockSetup: func(store *mockdb.MockStore) {
 			withProviderSearch(store)
 		},
-		code: 307,
+		code:       307,
 		buildStubs: withValidOrgMemberships,
-	} , {
+	}, {
 		name:                       "Success with remote user",
 		redirectUrl:                "http://localhost:8080",
 		remoteUser:                 sql.NullString{Valid: true, String: "31337"},
@@ -493,7 +497,7 @@ func TestProviderCallback(t *testing.T) {
 		storeMockSetup: func(store *mockdb.MockStore) {
 			withProviderSearch(store)
 		},
-		code: 307,
+		code:       307,
 		buildStubs: withValidOrgMemberships,
 	}, {
 		name:                       "Wrong remote userid",
@@ -504,7 +508,9 @@ func TestProviderCallback(t *testing.T) {
 		},
 		code: 403,
 		err:  "The provided login token was associated with a different user.\n",
-		buildStubs: nil,
+		buildStubs: func(_ *mockprovsvc.MockGitHubProviderService) {
+			// this codepath fails before the ghProviderService is called
+		},
 	}, {
 		name:        "No existing provider",
 		redirectUrl: "http://localhost:8080",
@@ -525,20 +531,19 @@ func TestProviderCallback(t *testing.T) {
 		storeMockSetup: func(store *mockdb.MockStore) {
 			withProviderNotFound(store)
 		},
-		config: []byte(`{`),
-		code:   http.StatusBadRequest,
+		config:     []byte(`{`),
+		code:       http.StatusBadRequest,
 		buildStubs: withValidOrgMemberships,
 	}, {
 		name:                       "Success with invalid ownerfilter",
 		redirectUrl:                "http://localhost:8080",
 		projectIDBySessionNumCalls: 1,
-		storeMockSetup: func(store *mockdb.MockStore) {
+		storeMockSetup: func(_ *mockdb.MockStore) {
+			// this codepath fails before the store is called
 		},
-		code: 403,
-		err: "The ownerFilter value provided does not allow access for the logged in user\n",
-		buildStubs: func(service *mockprovsvc.MockGitHubProviderService) {
-			service.EXPECT().ValidateOrgMembershipForToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)
-		},
+		code:       403,
+		err:        "The ownerFilter value provided does not allow access for the logged in user\n",
+		buildStubs: withInvalidORgMemberships,
 	}}
 
 	for _, tt := range testCases {
@@ -595,7 +600,8 @@ func TestProviderCallback(t *testing.T) {
 
 			mockGhProviderService := mockprovsvc.NewMockGitHubProviderService(ctrl)
 			tc.buildStubs(mockGhProviderService)
-			s, _ := newDefaultServer(t, store, clientFactory, mockGhProviderService)
+			s, _ := newDefaultServer(t, store, clientFactory)
+			s.ghProviders = mockGhProviderService
 			s.cfg.Provider = serverconfig.ProviderConfig{
 				GitHub: &serverconfig.GitHubConfig{
 					OAuthClientConfig: serverconfig.OAuthClientConfig{
@@ -681,7 +687,7 @@ func TestProviderCallback(t *testing.T) {
 					},
 					RemoteUser:     tc.remoteUser,
 					ProviderConfig: tc.config,
-					OwnerFilter: sql.NullString{String: "TestOwner", Valid: true},
+					OwnerFilter:    sql.NullString{String: "TestOwner", Valid: true},
 				}, nil).Times(tc.projectIDBySessionNumCalls)
 
 			if tc.code < http.StatusBadRequest {

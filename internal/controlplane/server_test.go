@@ -42,7 +42,6 @@ import (
 	"github.com/stacklok/minder/internal/crypto"
 	"github.com/stacklok/minder/internal/events"
 	"github.com/stacklok/minder/internal/providers"
-
 	ghclient "github.com/stacklok/minder/internal/providers/github/clients"
 	ghService "github.com/stacklok/minder/internal/providers/github/service"
 	pb "github.com/stacklok/minder/pkg/api/protobuf/go/minder/v1"
@@ -78,7 +77,6 @@ func newDefaultServer(
 	t *testing.T,
 	mockStore *mockdb.MockStore,
 	ghClientFactory ghclient.GitHubClientFactory,
-	ghClientService ghService.GitHubProviderService,
 ) (*Server, events.Interface) {
 	t.Helper()
 
@@ -105,21 +103,19 @@ func newDefaultServer(
 	eng, err := crypto.NewEngineFromConfig(c)
 	require.NoError(t, err)
 	// Create a new GithubProviderService if one is not provided
-	if (ghClientService == nil) {
-		ghClientService = ghService.NewGithubProviderService(
-			mockStore,
-			eng,
-			metrics.NewNoopMetrics(),
-			// These nil dependencies do not matter for the current tests
-			&serverconfig.ProviderConfig{
-				GitHubApp: &serverconfig.GitHubAppConfig{
-					WebhookSecret: "test",
-				},
+	ghClientService := ghService.NewGithubProviderService(
+		mockStore,
+		eng,
+		metrics.NewNoopMetrics(),
+		// These nil dependencies do not matter for the current tests
+		&serverconfig.ProviderConfig{
+			GitHubApp: &serverconfig.GitHubAppConfig{
+				WebhookSecret: "test",
 			},
-			nil,
-			ghClientFactory,
-		)
-	}
+		},
+		nil,
+		ghClientFactory,
+	)
 	server := &Server{
 		store:         mockStore,
 		evt:           evt,

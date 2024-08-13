@@ -291,7 +291,7 @@ func (s *Server) processOAuthCallback(ctx context.Context, w http.ResponseWriter
 		return fmt.Errorf("error encoding token: %w", err)
 	}
 	// Verify if the token user is a member of the ownerFilter (Organization)
-	if (stateData.OwnerFilter.Valid) {
+	if stateData.OwnerFilter.Valid {
 		member, err := s.ghProviders.ValidateOrgMembershipForToken(ctx, token, stateData.OwnerFilter.String)
 		if err != nil {
 			return fmt.Errorf("error checking organization membership: %w", err)
@@ -301,7 +301,7 @@ func (s *Server) processOAuthCallback(ctx context.Context, w http.ResponseWriter
 			return newHttpError(http.StatusForbidden, "Invalid OwnerFilter Provided").SetContents(
 				"The ownerFilter value provided does not allow access for the logged in user")
 		}
-	} 
+	}
 
 	var errConfig providers.ErrProviderInvalidConfig
 
