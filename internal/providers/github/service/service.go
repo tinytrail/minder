@@ -63,7 +63,6 @@ type GitHubProviderService interface {
 	// DeleteInstallation deletes the installation from GitHub, if the provider has an associated installation
 	DeleteInstallation(ctx context.Context, providerID uuid.UUID) error
 	VerifyProviderTokenIdentity(ctx context.Context, remoteUser string, accessToken string) error
-
 	// ValidateOrgMembershipForToken checks if the token user is a member of the organization
 	ValidateOrgMembershipForToken(ctx context.Context, token *oauth2.Token, org string) (bool, error)
 }
@@ -444,6 +443,6 @@ func (*ghProviderService) ValidateOrgMembershipForToken(ctx context.Context, tok
 	if membership.GetState() == "active" {
 		return true, nil
 	}
-	// If the user is not a member of the organization
+	// If the user is not active member of the organization
 	return false, nil
 }

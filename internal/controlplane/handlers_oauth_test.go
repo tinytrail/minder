@@ -542,7 +542,7 @@ func TestProviderCallback(t *testing.T) {
 			// this codepath fails before the store is called
 		},
 		code:       403,
-		err:        "The ownerFilter value provided does not allow access for the logged in user\n",
+		err:        "You do not have access to the organization TestOwner, specified in the owner filter. Please ensure that you are a member of the GitHub organization and try again.\n",
 		buildStubs: withInvalidORgMemberships,
 	}}
 
@@ -713,12 +713,6 @@ func TestProviderCallback(t *testing.T) {
 				if resp.Header().Get("Location") != tc.redirectUrl {
 					t.Errorf("Unexpected redirect URL: %v", resp.Header().Get("Location"))
 				}
-			}
-			if (tc.code == http.StatusForbidden) && tc.err != "" {
-				if string(body) != tc.err {
-					t.Errorf("Unexpected error message: %q", string(body))
-				}
-				return
 			}
 			if tc.err != "" {
 				if string(body) != tc.err {

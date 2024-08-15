@@ -290,16 +290,14 @@ func (s *Server) processOAuthCallback(ctx context.Context, w http.ResponseWriter
 	if err != nil {
 		return fmt.Errorf("error encoding token: %w", err)
 	}
+
 	// Verify if the token user is a member of the ownerFilter (Organization)
 	if stateData.OwnerFilter.Valid {
-		member, err := s.ghProviders.ValidateOrgMembershipForToken(ctx, token, stateData.OwnerFilter.String)
-		if err != nil {
-			return fmt.Errorf("error checking organization membership: %w", err)
-		}
-
+		member, _ := s.validateOwnerFilter(ctx, token, stateData.OwnerFilter.String)
 		if !member {
 			return newHttpError(http.StatusForbidden, "Invalid OwnerFilter Provided").SetContents(
-				"The ownerFilter value provided does not allow access for the logged in user")
+				"You do not have access to the organization %s, specified in the owner filter."+
+					" Please ensure that you are a member of the GitHub organization and try again.", stateData.OwnerFilter.String)
 		}
 	}
 
@@ -334,6 +332,14 @@ func (s *Server) processOAuthCallback(ctx context.Context, w http.ResponseWriter
 	}
 
 	return nil
+}
+
+func (s *Server) validateOwnerFilter(ctx context.Context, token *oauth2.Token, ownerFilter string) (bool, error) {
+	member, err := s.ghProviders.ValidateOrgMembershipForToken(ctx, token, ownerFilter)
+	if err != nil {
+		return false, fmt.Errorf("error validating organization membership: %w", err)
+	}
+	return member, nil
 }
 
 func (s *Server) processAppCallback(ctx context.Context, w http.ResponseWriter, r *http.Request,

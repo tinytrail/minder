@@ -102,7 +102,6 @@ func newDefaultServer(
 	// of this code, and refactor these tests to use stubs.
 	eng, err := crypto.NewEngineFromConfig(c)
 	require.NoError(t, err)
-	// Create a new GithubProviderService if one is not provided
 	ghClientService := ghService.NewGithubProviderService(
 		mockStore,
 		eng,
@@ -116,6 +115,7 @@ func newDefaultServer(
 		nil,
 		ghClientFactory,
 	)
+
 	server := &Server{
 		store:         mockStore,
 		evt:           evt,
@@ -131,6 +131,7 @@ func newDefaultServer(
 
 	return server, evt
 }
+
 func generateTokenKey(t *testing.T) string {
 	t.Helper()
 
